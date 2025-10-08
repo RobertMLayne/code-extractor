@@ -1,0 +1,4 @@
+beautifulsoup4>=4.12
+
+[:platform_python_implementation != "PyPy"]
+lxml>=5.2

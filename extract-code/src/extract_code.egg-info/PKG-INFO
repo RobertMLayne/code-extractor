@@ -1,0 +1,12 @@
+Metadata-Version: 2.4
+Name: extract-code
+Version: 0.2.0
+Summary: Robust ChatGPT HTML/JSON code‑block extractor
+Author-email: "Robert M. Layne" <robert@example.com>
+License: MIT
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: beautifulsoup4>=4.12
+Requires-Dist: lxml>=5.2; platform_python_implementation != "PyPy"
+Dynamic: license-file
