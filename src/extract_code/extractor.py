@@ -1,10 +1,11 @@
 """Write code blocks from conversations to disk."""
+
 from __future__ import annotations
 
 import logging
+from collections.abc import Iterable, Sequence
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from typing import Iterable, Sequence
 
 from .utils import (
     CODE_BLOCK_RE,
@@ -42,10 +43,14 @@ def _process_conversation(
             seen.add(digest)
 
             ext = EXT_MAP.get(lang, ".txt")
-            name = "index" + ext if written == 0 and ext in {".html", ".js"} else f"script{written + 1}{ext}"
+            name = (
+                "index" + ext
+                if written == 0 and ext in {".html", ".js"}
+                else f"script{written + 1}{ext}"
+            )
             path = folder / name
             if not overwrite and path.exists():
-                path = path.with_stem(f"{path.stem}_{written+1}")
+                path = path.with_stem(f"{path.stem}_{written + 1}")
 
             if add_comment:
                 prefix, suffix = comment_tokens(lang)
@@ -62,7 +67,7 @@ def extract_all(
     conversations: Iterable[tuple[str, Sequence[str]]],
     out_root: Path,
     workers: int = 1,
-    **kwargs,
+    **kwargs: bool,
 ) -> int:
     """Dispatch extraction in parallel; return total files."""
     out_root.mkdir(parents=True, exist_ok=True)
@@ -70,5 +75,7 @@ def extract_all(
         return sum(_process_conversation(t, m, out_root, **kwargs) for t, m in conversations)
 
     with ThreadPoolExecutor(max_workers=workers) as pool:
-        futs = [pool.submit(_process_conversation, t, m, out_root, **kwargs) for t, m in conversations]
+        futs = [
+            pool.submit(_process_conversation, t, m, out_root, **kwargs) for t, m in conversations
+        ]
         return sum(f.result() for f in as_completed(futs))

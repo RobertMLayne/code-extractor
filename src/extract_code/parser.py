@@ -1,22 +1,23 @@
 """HTML / JSON parsing into (title, [messages]) tuples."""
+
 from __future__ import annotations
 
 import json
 import logging
 from pathlib import Path
-from typing import List, Sequence, Tuple
+from typing import Any
 
-from bs4 import BeautifulSoup  # type: ignore[import]
+from bs4 import BeautifulSoup
 from bs4.element import Tag
 
 LOGGER = logging.getLogger(__name__)
 
 __all__ = ["load_conversations"]
 
-Convo = Tuple[str, List[str]]
+Convo = tuple[str, list[str]]
 
 
-def _from_json(script_tag: Tag) -> List[Convo]:
+def _from_json(script_tag: Tag) -> list[Convo]:
     text: str = script_tag.string or ""
     try:
         start, end = text.index("["), text.rindex("]")
@@ -25,7 +26,7 @@ def _from_json(script_tag: Tag) -> List[Convo]:
         LOGGER.debug("Embedded JSON decode failed")
         return []
 
-    convos: List[Convo] = []
+    convos: list[Convo] = []
     for convo in data:
         title = convo.get("title", "conversation")
         mapping = convo.get("mapping", {})
@@ -34,9 +35,10 @@ def _from_json(script_tag: Tag) -> List[Convo]:
             for mid, node in mapping.items()
             if node.get("parent") is None and node.get("children")
         ]
-        msgs: List[str] = []
+        msgs: list[str] = []
 
-        def dfs(node_id: str) -> None:
+        # Bind this conversation's state explicitly for the recursive traversal.
+        def dfs(node_id: str, mapping: dict[str, Any] = mapping, msgs: list[str] = msgs) -> None:
             node = mapping.get(node_id, {})
             msg = node.get("message")
             if msg:
@@ -53,7 +55,7 @@ def _from_json(script_tag: Tag) -> List[Convo]:
     return convos
 
 
-def load_conversations(html_path: Path) -> List[Convo]:
+def load_conversations(html_path: Path) -> list[Convo]:
     """Return a list of conversations from *html_path*."""
     soup = BeautifulSoup(html_path.read_text(encoding="utf-8"), "html.parser")
 
@@ -61,7 +63,7 @@ def load_conversations(html_path: Path) -> List[Convo]:
         "script",
         string=lambda s: s and ("mapping" in s.lower() or "json" in s.lower()),
     )
-    if script:
+    if isinstance(script, Tag):
         convos = _from_json(script)  # precise ChatGPT export path
         if convos:
             return convos

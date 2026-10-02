@@ -1,6 +1,6 @@
 # tests/test_parser.py
-from pathlib import Path
 from extract_code.parser import load_conversations
+
 
 def test_plain_html(tmp_path):
     html = tmp_path / "x.html"

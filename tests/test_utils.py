@@ -1,19 +1,24 @@
-"""Public API."""
-from importlib.metadata import version as _v
+"""Regression checks for extraction options through the public package."""
 
-from .cli import main as _main
-from .extractor import extract_all
-from .parser import load_conversations
-from .utils import comment_tokens, hash_code, sanitize_filename
+from pathlib import Path
 
-__all__ = [
-    "extract_all",
-    "load_conversations",
-    "comment_tokens",
-    "hash_code",
-    "sanitize_filename",
-    "main",
-]
+from extract_code import extract_all
 
-__version__: str = _v("extract-code")
-main = _main  # re‑export for convenience
+
+def test_extraction_deduplicates_and_preserves_existing_files(tmp_path: Path) -> None:
+    conversation = [("Example / export", ["```python\nprint('hello')\n```"] * 2)]
+    count = extract_all(
+        conversation, tmp_path, deduplicate=True, overwrite=False, add_comment=True
+    )
+    assert count == 1
+    folder = tmp_path / "Example _ export"
+    original = folder / "script1.py"
+    expected = "# Extracted from \"Example / export\", message #1\nprint('hello')\n"
+    assert original.read_text(encoding="utf-8") == expected
+
+    count = extract_all(
+        conversation, tmp_path, deduplicate=True, overwrite=False, add_comment=False
+    )
+    assert count == 1
+    assert original.read_text(encoding="utf-8") == expected
+    assert (folder / "script1_1.py").read_text(encoding="utf-8") == "print('hello')\n"

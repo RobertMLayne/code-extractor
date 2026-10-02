@@ -1,9 +1,10 @@
 """Utility helpers: comment tokens, hashing, sanitising, regex."""
+
 from __future__ import annotations
 
 import hashlib
 import re
-from typing import Final, Tuple
+from typing import Final
 
 __all__ = [
     "EXT_MAP",
@@ -43,23 +44,24 @@ EXT_MAP: Final[dict[str, str]] = {
 }
 
 # language → (prefix, suffix)
-COMMENT_PREFIX: Final[dict[str, Tuple[str, str]]] = {
-    **{k: ("# ", "") for k in ("python", "py", "bash", "sh", "shell", "r")},
-    **{k: ("// ", "") for k in ("javascript", "js", "typescript", "ts", "java", "c", "cpp", "c++", "go", "rust")},
-    **{k: ("<!-- ", " -->") for k in ("html", "xml")},
+COMMENT_PREFIX: Final[dict[str, tuple[str, str]]] = {
+    **dict.fromkeys(("python", "py", "bash", "sh", "shell", "r"), ("# ", "")),
+    **dict.fromkeys(
+        ("javascript", "js", "typescript", "ts", "java", "c", "cpp", "c++", "go", "rust"),
+        ("// ", ""),
+    ),
+    **dict.fromkeys(("html", "xml"), ("<!-- ", " -->")),
     "json": ("// ", ""),
     "sql": ("-- ", ""),
 }
-DEFAULT_PREFIX: Final[Tuple[str, str]] = ("# ", "")
+DEFAULT_PREFIX: Final[tuple[str, str]] = ("# ", "")
 
-CODE_BLOCK_RE: Final[re.Pattern[str]] = re.compile(
-    r"```([^\n]*)\n(.*?)```", flags=re.DOTALL
-)
+CODE_BLOCK_RE: Final[re.Pattern[str]] = re.compile(r"```([^\n]*)\n(.*?)```", flags=re.DOTALL)
 
 # ---------------------------------------------------------------------------
 
 
-def comment_tokens(lang: str) -> Tuple[str, str]:
+def comment_tokens(lang: str) -> tuple[str, str]:
     """Return comment (prefix, suffix) for *lang* or a safe default."""
     return COMMENT_PREFIX.get(lang, DEFAULT_PREFIX)
 

@@ -1,4 +1,5 @@
 """Public API."""
+
 from importlib.metadata import version as _v
 
 from .cli import main as _main
