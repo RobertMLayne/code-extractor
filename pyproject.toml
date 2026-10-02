@@ -24,9 +24,13 @@ package-dir = {"" = "src"}
 
 [tool.pytest.ini_options]
 addopts = "-q --strict-markers"
+testpaths = ["tests"]
 
 [tool.ruff]
 line-length = 99
+target-version = "py39"
+
+[tool.ruff.lint]
 select = ["F", "E", "W", "I", "UP", "B", "A", "C4"]
 
 [tool.mypy]

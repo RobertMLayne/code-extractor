@@ -1,4 +1,5 @@
 """CLI entry point."""
+
 from __future__ import annotations
 
 import argparse
@@ -15,15 +16,24 @@ __all__ = ["main"]
 def _build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="extract-code",
-        description="Extract triple‑backtick code blocks from ChatGPT HTML/JSON exports."
+        description="Extract triple‑backtick code blocks from ChatGPT HTML/JSON exports.",
     )
     p.add_argument("html", type=Path, help="Path to exported HTML file")
     p.add_argument("output", type=Path, help="Destination directory")
     p.add_argument("--workers", type=int, default=1, help="Thread workers (I/O bound)")
     p.add_argument("--deduplicate", action="store_true", help="Skip identical snippets")
-    p.add_argument("--no-overwrite", dest="overwrite", action="store_false", help="Never clobber existing files")
-    p.add_argument("--no-add-comment", dest="add_comment", action="store_false", help="Omit provenance header")
-    p.add_argument("-v", "--verbose", action="count", default=0, help="Increase verbosity (-v, -vv)")
+    p.add_argument(
+        "--no-overwrite",
+        dest="overwrite",
+        action="store_false",
+        help="Never clobber existing files",
+    )
+    p.add_argument(
+        "--no-add-comment", dest="add_comment", action="store_false", help="Omit provenance header"
+    )
+    p.add_argument(
+        "-v", "--verbose", action="count", default=0, help="Increase verbosity (-v, -vv)"
+    )
     return p
 
 

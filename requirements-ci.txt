@@ -1,0 +1,4 @@
+# These versions support the full Python 3.9-3.13 validation matrix.
+pytest==8.4.2
+mypy==1.19.1
+ruff==0.16.9
