@@ -17,6 +17,18 @@ __all__ = ["load_conversations"]
 Convo = tuple[str, list[str]]
 
 
+def _walk_messages(node_id: str, mapping: dict[str, Any], msgs: list[str]) -> None:
+    """Traverse one conversation with explicit state and preserve child order."""
+    node = mapping.get(node_id, {})
+    msg = node.get("message")
+    if msg:
+        parts = msg.get("content", {}).get("parts") or []
+        if parts:
+            msgs.append(parts[0])
+    for kid in node.get("children", []):
+        _walk_messages(kid, mapping, msgs)
+
+
 def _from_json(script_tag: Tag) -> list[Convo]:
     text: str = script_tag.string or ""
     try:
@@ -37,20 +49,9 @@ def _from_json(script_tag: Tag) -> list[Convo]:
         ]
         msgs: list[str] = []
 
-        # Bind this conversation's state explicitly for the recursive traversal.
-        def dfs(node_id: str, mapping: dict[str, Any] = mapping, msgs: list[str] = msgs) -> None:
-            node = mapping.get(node_id, {})
-            msg = node.get("message")
-            if msg:
-                parts = msg.get("content", {}).get("parts") or []
-                if parts:
-                    msgs.append(parts[0])
-            for kid in node.get("children", []):
-                dfs(kid)
-
         for r in roots:
             for kid in mapping[r]["children"]:
-                dfs(kid)
+                _walk_messages(kid, mapping, msgs)
         convos.append((title, msgs))
     return convos
 
