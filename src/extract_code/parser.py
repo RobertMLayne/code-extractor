@@ -29,6 +29,18 @@ def _walk_messages(node_id: str, mapping: dict[str, Any], msgs: list[str]) -> No
         _walk_messages(kid, mapping, msgs)
 
 
+def _conversation_messages(mapping: dict[str, Any]) -> list[str]:
+    """Collect an export's messages independently of embedded JSON decoding."""
+    roots = [
+        mid for mid, node in mapping.items() if node.get("parent") is None and node.get("children")
+    ]
+    msgs: list[str] = []
+    for root in roots:
+        for kid in mapping[root]["children"]:
+            _walk_messages(kid, mapping, msgs)
+    return msgs
+
+
 def _from_json(script_tag: Tag) -> list[Convo]:
     text: str = script_tag.string or ""
     try:
@@ -38,22 +50,10 @@ def _from_json(script_tag: Tag) -> list[Convo]:
         LOGGER.debug("Embedded JSON decode failed")
         return []
 
-    convos: list[Convo] = []
-    for convo in data:
-        title = convo.get("title", "conversation")
-        mapping = convo.get("mapping", {})
-        roots = [
-            mid
-            for mid, node in mapping.items()
-            if node.get("parent") is None and node.get("children")
-        ]
-        msgs: list[str] = []
-
-        for r in roots:
-            for kid in mapping[r]["children"]:
-                _walk_messages(kid, mapping, msgs)
-        convos.append((title, msgs))
-    return convos
+    return [
+        (convo.get("title", "conversation"), _conversation_messages(convo.get("mapping", {})))
+        for convo in data
+    ]
 
 
 def load_conversations(html_path: Path) -> list[Convo]:
